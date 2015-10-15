@@ -128,8 +128,18 @@ http {
     }
     
     location / {
+      
+      add_header "Cache-Control" "no-cache, no-store, must-revalidate";
+      add_header "Pragma" "no-cache";
+      add_header "Expires" "0";
+      try_files $uri @prerender $uri/ /index.html =404;
+      <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Base-Location on;<% end %>
+    
+    }
+    
+    location @prerender {
       proxy_set_header X-Prerender-Token <%= ENV["PRERENDER_TOKEN"] %>;
-        
+          
       set $prerender 0;
       if ($http_user_agent ~* "baiduspider|twitterbot|facebookexternalhit|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot|vkShare|W3C_Validator") {
           set $prerender 1;
@@ -146,7 +156,7 @@ http {
       
       #resolve using Google's DNS server to force DNS resolution and prevent caching of IPs
       resolver 8.8.8.8;
-
+  
       if ($prerender = 1) {
           
           #setting prerender as a variable forces DNS resolution since nginx caches IPs and doesnt play well with load balancing
@@ -157,14 +167,6 @@ http {
       if ($prerender = 0) {
           rewrite .* /index.html break;
       }
-      if ($prerender = 0) {
-        add_header "Cache-Control" "no-cache, no-store, must-revalidate";
-        add_header "Pragma" "no-cache";
-        add_header "Expires" "0";
-        try_files $uri $uri/ /index.html =404;
-        <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Base-Location on;<% end %>
-      }
-    
     }
     
   }
