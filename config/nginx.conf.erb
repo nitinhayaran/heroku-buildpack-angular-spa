@@ -97,8 +97,10 @@ http {
         <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-External-Token-Proxy on;<% end %>
       }
     <% end %>
-
-    try_files $uri @prerender;
+    
+    location / {
+      try_files $uri @prerender;
+    }
 
     location ~* \index.html$ {
       expires off;
