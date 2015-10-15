@@ -140,7 +140,7 @@ http {
     }
     
     location @prerender {
-        proxy_set_header X-Prerender-Token ENV["PRERENDER_TOKEN"];
+        proxy_set_header X-Prerender-Token <% ENV["PRERENDER_TOKEN"] %>;
         
         set $prerender 0;
         if ($http_user_agent ~* "baiduspider|twitterbot|facebookexternalhit|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot|vkShare|W3C_Validator") {
