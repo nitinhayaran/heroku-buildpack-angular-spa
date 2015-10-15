@@ -130,14 +130,6 @@ http {
       deny all;
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Denied on;<% end %>
     }
-
-    location / {
-      add_header "Cache-Control" "no-cache, no-store, must-revalidate";
-      add_header "Pragma" "no-cache";
-      add_header "Expires" "0";
-      try_files $uri $uri/ /index.html =404;
-      <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Base-Location on;<% end %>
-    }
     
     location @prerender {
         proxy_set_header X-Prerender-Token <%= ENV["PRERENDER_TOKEN"] %>;
@@ -168,6 +160,13 @@ http {
         }
         if ($prerender = 0) {
             rewrite .* /index.html break;
+        }
+        if ($prerender = 0) {
+          add_header "Cache-Control" "no-cache, no-store, must-revalidate";
+          add_header "Pragma" "no-cache";
+          add_header "Expires" "0";
+          try_files $uri $uri/ /index.html =404;
+          <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Base-Location on;<% end %>
         }
     }
     
