@@ -97,10 +97,6 @@ http {
         <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-External-Token-Proxy on;<% end %>
       }
     <% end %>
-    
-    location / {
-      try_files $uri @prerender;
-    }
 
     location ~* \index.html$ {
       expires off;
@@ -129,6 +125,10 @@ http {
     location ~ /\. {
       deny all;
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Denied on;<% end %>
+    }
+    
+    location / {
+      try_files $uri @prerender;
     }
     
     location @prerender {
