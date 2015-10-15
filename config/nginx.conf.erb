@@ -128,13 +128,7 @@ http {
     }
     
     location / {
-      
-      add_header "Cache-Control" "no-cache, no-store, must-revalidate";
-      add_header "Pragma" "no-cache";
-      add_header "Expires" "0";
-      try_files $uri @prerender $uri/ /index.html =404;
-      <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Base-Location on;<% end %>
-    
+      try_files $uri @prerender;
     }
     
     location @prerender {
@@ -165,6 +159,10 @@ http {
           proxy_pass http://$prerender;
       }
       if ($prerender = 0) {
+          add_header "Cache-Control" "no-cache, no-store, must-revalidate";
+          add_header "Pragma" "no-cache";
+          add_header "Expires" "0";
+          <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Base-Location on;<% end %>
           rewrite .* /index.html break;
       }
     }
