@@ -32,25 +32,18 @@ http {
   default_type application/octet-stream;
   sendfile on;
 
-
-  <% if ENV["FORCE_HTTPS"] %>
-  server{
-    listen         80;
-    server_name    _;
-    return         301 https://$host$request_uri;
-  }
-  <% end %>
-    
   server {
-    <% if ENV["FORCE_HTTPS"] %>
-    listen 443 ssl;
-    <% else %>
     listen <%= ENV["PORT"] || 80 %>;
-    <% end %>
     server_name _;
     keepalive_timeout 5;
     root dist;
     index index.html;
+
+    <% if ENV["FORCE_HTTPS"] %>
+      if ( $http_x_forwarded_proto != 'https' ) {
+        return 301 https://$host$request_uri;
+      }
+    <% end %>
 
     <% if ENV["BASIC_AUTH_USER"] && ENV["BASIC_AUTH_PASSWORD"] %>
       auth_basic "Restricted";
