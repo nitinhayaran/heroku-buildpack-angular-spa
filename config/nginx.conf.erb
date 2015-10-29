@@ -98,6 +98,12 @@ http {
       }
     <% end %>
 
+    <% if ENV["ENV"] == "test" %>
+    location /robots.txt {
+      try_files /robots-dev.txt =404;
+    }
+    <% end %>
+
     location ~* \index.html$ {
       expires off;
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Html on;<% end %>
@@ -126,12 +132,6 @@ http {
       deny all;
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Denied on;<% end %>
     }
-
-    <% if ENV["ENV"] == "test" %>
-    location /robots.txt {
-      try_files /robots-dev.txt =404;
-    }
-    <% end %>
 
     location / {
       try_files $uri @prerender;
