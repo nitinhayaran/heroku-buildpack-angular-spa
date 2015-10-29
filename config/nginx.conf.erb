@@ -99,7 +99,7 @@ http {
     <% end %>
 
     <% if ENV["ENV"] == "test" %>
-    location /robots.txt {
+    location = /robots.txt {
       try_files /robots-dev.txt =404;
     }
     <% end %>
