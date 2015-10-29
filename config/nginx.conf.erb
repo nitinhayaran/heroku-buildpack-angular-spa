@@ -103,7 +103,7 @@ http {
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Html on;<% end %>
     }
 
-    location /robots.txt {
+    location ~* \robots.txt {
       expires off;
       <% if ENV["ENV"] == "test" %>alias /robots-dev.txt;<% end %>
     }
