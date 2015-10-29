@@ -103,11 +103,10 @@ http {
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Html on;<% end %>
     }
 
-    <% if ENV["ENV"] == "test" %>
     location /robots.txt {
-      try_files /robots-dev.txt =404;
+      expires off;
+      <% if ENV["ENV"] == "test" %>alias /robots-dev.txt;<% end %>
     }
-    <% end %>
 
     location ~* \.(ogg|ogv|svgz|mp4|css|rss|atom|js|jpg|jpeg|gif|png|ico|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|tar|mid|midi|wav|bmp|rtf|html|txt|htm)$ {
       expires max;
