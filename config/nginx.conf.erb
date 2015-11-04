@@ -118,9 +118,22 @@ http {
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Speed on;<% end %>
     }
 
-    location ~* \.(eot|oft|svg|ttf|woff|js)$ {
-      add_header Access-Control-Allow-Origin *;
-      add_header Access-Control-Allow-Methods GET;
+    location ~* \.(js)$ {
+      add_header 'Access-Control-Allow-Origin' '*';
+      add_header 'Access-Control-Allow-Credentials' 'true';
+      add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+      expires max;
+      log_not_found off;
+      access_log off;
+      add_header Cache-Control public;
+      fastcgi_hide_header Set-Cookie;
+      <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-JS on;<% end %>
+    }
+
+    location ~* \.(eot|oft|svg|ttf|woff)$ {
+      add_header 'Access-Control-Allow-Origin' '*';
+      add_header 'Access-Control-Allow-Credentials' 'true';
+      add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
       expires max;
       log_not_found off;
       access_log off;
