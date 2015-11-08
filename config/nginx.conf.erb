@@ -70,6 +70,12 @@ http {
       }
     <% end %>
 
+    <% if ENV["BASE_DOMAIN"] %>
+      if ( $host == '<%= ENV["BASE_DOMAIN"] %>' ) {
+        return 301 $http_x_forwarded_proto://www.<%= ENV["BASE_DOMAIN"] %>$request_uri;
+      }
+    <% end %>
+
     <% if ENV["BASIC_AUTH_USER"] && ENV["BASIC_AUTH_PASSWORD"] %>
       auth_basic "Restricted";
       auth_basic_user_file <%= "#{ENV["HOME"]}/config/htpasswd" %>;
