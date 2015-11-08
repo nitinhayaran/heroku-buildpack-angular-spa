@@ -71,7 +71,7 @@ http {
     <% end %>
 
     <% if ENV["BASE_DOMAIN"] %>
-      if ( $host == '<%= ENV["BASE_DOMAIN"] %>' ) {
+      if ( $host = '<%= ENV["BASE_DOMAIN"] %>' ) {
         return 301 $http_x_forwarded_proto://www.<%= ENV["BASE_DOMAIN"] %>$request_uri;
       }
     <% end %>
