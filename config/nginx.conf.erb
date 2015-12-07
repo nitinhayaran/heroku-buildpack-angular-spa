@@ -132,10 +132,10 @@ http {
 
     # for robots.txt
     location = /robots.txt {
-      try_files /robots-dev.txt =404;
-    }
-    if ( $host = 'www.campuskudos.com' ) {
-      location = /robots.txt {
+      if ($host != 'www.campuskudos.com'){
+        try_files /robots-dev.txt =404;
+      }
+      if ( $host = 'www.campuskudos.com' ) {
         try_files /robots.txt =404;
       }
     }
