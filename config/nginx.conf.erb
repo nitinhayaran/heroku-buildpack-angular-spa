@@ -132,9 +132,9 @@ http {
 
     # for robots.txt
     location = /robots.txt {
-      set $a 'robots-dev.txt';
-      if ( $host = 'www.campuskudos.com' ) {
-        set $a 'robots.txt';
+      set $a "robots-dev.txt";
+      if ( $host = "www.campuskudos.com" ) {
+        set $a "robots.txt";
       }
       try_files /$a =404;
     }
