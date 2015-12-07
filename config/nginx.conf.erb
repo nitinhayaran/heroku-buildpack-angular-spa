@@ -130,11 +130,15 @@ http {
       }
     <% end %>
 
-    <% if ENV["ENV"] == "test" %>
+    # for robots.txt
     location = /robots.txt {
       try_files /robots-dev.txt =404;
     }
-    <% end %>
+    if ( $host = 'www.campuskudos.com' ) {
+      location = /robots.txt {
+        try_files /robots.txt =404;
+      }
+    }
 
     location ~* \index.html$ {
       expires off;
