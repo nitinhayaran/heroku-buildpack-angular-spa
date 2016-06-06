@@ -77,7 +77,7 @@ http {
     <% end %>
 
     if ( $host = 'www.campuskudos.com' ) {
-      return 301 $http_x_forwarded_proto://www.peoplegrove.com$request_uri;
+      return 301 https://www.peoplegrove.com/for-education?redirect=true;
     }
 
     <% if ENV["BASIC_AUTH_USER"] && ENV["BASIC_AUTH_PASSWORD"] %>
