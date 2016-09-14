@@ -136,7 +136,13 @@ http {
 
     # for robots.txt
     location = /robots.txt {
-      set $a "robots-dev.txt";
+      set $a "robots-client.txt";
+      if ( $host ~* "*.test.campuskudos.com" ) {
+        set $a "robots-dev.txt";
+      }
+      if ( $host ~* "*.test.peoplegrove.com" ) {
+        set $a "robots-dev.txt";
+      }
       if ( $host = "www.peoplegrove.com" ) {
         set $a "robots.txt";
       }
