@@ -200,6 +200,8 @@ http {
       proxy_set_header X-Prerender-Token <%= ENV["PRERENDER_TOKEN"] %>;
 
       set $prerender 0;
+      set $redirect_squarespace 0;
+
       if ($http_user_agent ~* "baiduspider|twitterbot|facebookexternalhit|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot|vkShare|W3C_Validator") {
           set $prerender 1;
       }
@@ -212,9 +214,17 @@ http {
       if ($uri ~ "\.(js|css|xml|less|png|jpg|jpeg|gif|pdf|doc|txt|ico|rss|zip|mp3|rar|exe|wmv|doc|avi|ppt|mpg|mpeg|tif|wav|mov|psd|ai|xls|mp4|m4a|swf|dat|dmg|iso|flv|m4v|torrent|ttf|woff)") {
           set $prerender 0;
       }
+      if ($host = 'www.dev.pg-test.com') {
+        set $redirect_squarespace 1;
+      }
 
       #resolve using Google's DNS server to force DNS resolution and prevent caching of IPs
       resolver 8.8.8.8;
+
+      if ($redirect_squarespace = 1){
+          proxy_pass https://peoplegrove.squarespace.com;
+          set $prerender = 0;
+      }
 
       if ($prerender = 1) {
 
