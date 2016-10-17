@@ -87,7 +87,11 @@ http {
 
     <% if ENV["API_URL"] %>
       location <%= ENV["API_PREFIX_PATH"] || "/api/" %> {
-        proxy_pass <%= ENV["API_URL"] %>;
+        set $apiDomain https://peoplegrove.squarespace.com;
+        if ($http_origin ~* 'https?://(www\.dev\.pg-test\.com)') {
+          set $apiDomain <%= ENV["API_URL"] %>;
+        }
+        proxy_pass $apiDomain;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-NginX-Proxy true;
