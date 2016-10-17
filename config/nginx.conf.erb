@@ -99,6 +99,7 @@ http {
         proxy_ssl_session_reuse off;
         proxy_redirect off;
         <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-API-Proxy on;<% end %>
+        <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-API-Domain $apiDomain;<% end %>
       }
     <% end %>
 
