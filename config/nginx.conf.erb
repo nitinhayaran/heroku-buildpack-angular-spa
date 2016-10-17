@@ -88,7 +88,7 @@ http {
     <% if ENV["API_URL"] %>
       location <%= ENV["API_PREFIX_PATH"] || "/api/" %> {
         proxy_pass <%= ENV["API_URL"] %>;
-        if ($http_origin ~* 'https?://(www\.dev\.pg-test\.com)') {
+        if ($http_origin = 'https://<%= ENV["WWW_BASE_DOMAIN"] %>') {
           proxy_pass https://peoplegrove.squarespace.com;
         }
         proxy_set_header X-Real-IP $remote_addr;
@@ -188,6 +188,9 @@ http {
       add_header Cache-Control public;
       fastcgi_hide_header Set-Cookie;
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Font on;<% end %>
+      <% if ENV["WWW_BASE_DOMAIN"] %>
+        try_files $uri @squarespace;
+      <% end %>
     }
 
     location ~ /\. {
@@ -197,6 +200,12 @@ http {
 
     location / {
       try_files $uri @prerender;
+    }
+
+    location @squarespace {
+      if ($host = '<%= ENV["WWW_BASE_DOMAIN"] %>') {
+        proxy_pass <%= ENV["WWW_PROXY_SITE"] %>;
+      }
     }
 
     location @prerender {
@@ -217,7 +226,7 @@ http {
       if ($uri ~ "\.(js|css|xml|less|png|jpg|jpeg|gif|pdf|doc|txt|ico|rss|zip|mp3|rar|exe|wmv|doc|avi|ppt|mpg|mpeg|tif|wav|mov|psd|ai|xls|mp4|m4a|swf|dat|dmg|iso|flv|m4v|torrent|ttf|woff)") {
           set $prerender 0;
       }
-      if ($host = 'www.dev.pg-test.com') {
+      if ($host = '<%= ENV["WWW_BASE_DOMAIN"] %>') {
         set $redirectSquarespace 1;
       }
 
@@ -226,7 +235,7 @@ http {
 
       if ($redirectSquarespace = 1){
           set $prerender 3;
-          proxy_pass https://peoplegrove.squarespace.com;
+          proxy_pass <%= ENV["WWW_PROXY_SITE"] %>;
       }
 
       if ($prerender = 1) {
