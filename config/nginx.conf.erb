@@ -200,7 +200,7 @@ http {
       proxy_set_header X-Prerender-Token <%= ENV["PRERENDER_TOKEN"] %>;
 
       set $prerender 0;
-      set $redirect_squarespace 0;
+      set $redirectSquarespace 0;
 
       if ($http_user_agent ~* "baiduspider|twitterbot|facebookexternalhit|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot|vkShare|W3C_Validator") {
           set $prerender 1;
@@ -215,13 +215,13 @@ http {
           set $prerender 0;
       }
       if ($host = 'www.dev.pg-test.com') {
-        set $redirect_squarespace 1;
+        set $redirectSquarespace 1;
       }
 
       #resolve using Google's DNS server to force DNS resolution and prevent caching of IPs
       resolver 8.8.8.8;
 
-      if ($redirect_squarespace = 1){
+      if ($redirectSquarespace = 1){
           set $prerender = 3;
           proxy_pass https://peoplegrove.squarespace.com;
       }
