@@ -88,9 +88,6 @@ http {
     <% if ENV["API_URL"] %>
       location <%= ENV["API_PREFIX_PATH"] || "/api/" %> {
         proxy_pass <%= ENV["API_URL"] %>;
-        if ($http_origin ~* 'https?://(www\.dev\.pg-test\.com)') {
-          proxy_pass https://peoplegrove.squarespace.com;
-        }
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-NginX-Proxy true;
@@ -203,8 +200,6 @@ http {
       proxy_set_header X-Prerender-Token <%= ENV["PRERENDER_TOKEN"] %>;
 
       set $prerender 0;
-      set $redirectSquarespace 0;
-
       if ($http_user_agent ~* "baiduspider|twitterbot|facebookexternalhit|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot|vkShare|W3C_Validator") {
           set $prerender 1;
       }
@@ -217,17 +212,9 @@ http {
       if ($uri ~ "\.(js|css|xml|less|png|jpg|jpeg|gif|pdf|doc|txt|ico|rss|zip|mp3|rar|exe|wmv|doc|avi|ppt|mpg|mpeg|tif|wav|mov|psd|ai|xls|mp4|m4a|swf|dat|dmg|iso|flv|m4v|torrent|ttf|woff)") {
           set $prerender 0;
       }
-      if ($host = 'www.dev.pg-test.com') {
-        set $redirectSquarespace 1;
-      }
 
       #resolve using Google's DNS server to force DNS resolution and prevent caching of IPs
       resolver 8.8.8.8;
-
-      if ($redirectSquarespace = 1){
-          set $prerender 3;
-          proxy_pass https://peoplegrove.squarespace.com;
-      }
 
       if ($prerender = 1) {
 
