@@ -87,6 +87,7 @@ http {
 
     <% if ENV["API_URL"] %>
       location <%= ENV["API_PREFIX_PATH"] || "/api/" %> {
+        resolver 8.8.8.8;
         set $apiDomain <%= ENV["API_URL"] %>;
         if ($http_origin ~* 'https?://(www\.dev\.pg-test\.com)') {
           set $apiDomain https://peoplegrove.squarespace.com;
