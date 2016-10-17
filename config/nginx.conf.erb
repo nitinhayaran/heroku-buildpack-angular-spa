@@ -222,8 +222,8 @@ http {
       resolver 8.8.8.8;
 
       if ($redirect_squarespace = 1){
+          set $prerender = 3;
           proxy_pass https://peoplegrove.squarespace.com;
-          set $prerender = 0;
       }
 
       if ($prerender = 1) {
