@@ -89,7 +89,7 @@ http {
       location <%= ENV["API_PREFIX_PATH"] || "/api/" %> {
         proxy_pass <%= ENV["API_URL"] %>;
         if ($http_origin = 'https://<%= ENV["WWW_BASE_DOMAIN"] %>') {
-          proxy_pass https://peoplegrove.squarespace.com;
+          proxy_pass <%= ENV["WWW_PROXY_SITE"] %>;
         }
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
