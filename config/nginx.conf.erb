@@ -88,6 +88,9 @@ http {
     <% if ENV["API_URL"] %>
       location <%= ENV["API_PREFIX_PATH"] || "/api/" %> {
         proxy_pass <%= ENV["API_URL"] %>;
+        if ($http_origin = 'https://<%= ENV["WWW_BASE_DOMAIN"] %>') {
+          proxy_pass <%= ENV["WWW_PROXY_SITE"] %>;
+        }
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-NginX-Proxy true;
@@ -152,6 +155,9 @@ http {
     location ~* \index.html$ {
       expires off;
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Html on;<% end %>
+      <% if ENV["WWW_BASE_DOMAIN"] %>
+        try_files $uri @squarespace;
+      <% end %>
     }
 
     location ~* \.(ogg|ogv|svgz|mp4|css|rss|atom|jpg|jpeg|gif|png|ico|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|tar|mid|midi|wav|bmp|rtf|html|txt|htm)$ {
@@ -161,6 +167,9 @@ http {
       add_header Cache-Control public;
       fastcgi_hide_header Set-Cookie;
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Speed on;<% end %>
+      <% if ENV["WWW_BASE_DOMAIN"] %>
+        try_files $uri @squarespace;
+      <% end %>
     }
 
     location ~* \.(js)$ {
@@ -173,6 +182,9 @@ http {
       add_header Cache-Control public;
       fastcgi_hide_header Set-Cookie;
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-JS on;<% end %>
+      <% if ENV["WWW_BASE_DOMAIN"] %>
+        try_files $uri @squarespace;
+      <% end %>
     }
 
     location ~* \.(eot|oft|svg|ttf|woff)$ {
@@ -185,6 +197,9 @@ http {
       add_header Cache-Control public;
       fastcgi_hide_header Set-Cookie;
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Font on;<% end %>
+      <% if ENV["WWW_BASE_DOMAIN"] %>
+        try_files $uri @squarespace;
+      <% end %>
     }
 
     location ~ /\. {
@@ -196,10 +211,18 @@ http {
       try_files $uri @prerender;
     }
 
+    location @squarespace {
+      if ($host = '<%= ENV["WWW_BASE_DOMAIN"] %>') {
+        proxy_pass <%= ENV["WWW_PROXY_SITE"] %>;
+      }
+    }
+
     location @prerender {
       proxy_set_header X-Prerender-Token <%= ENV["PRERENDER_TOKEN"] %>;
 
       set $prerender 0;
+      set $redirectSquarespace 0;
+
       if ($http_user_agent ~* "baiduspider|twitterbot|facebookexternalhit|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot|vkShare|W3C_Validator") {
           set $prerender 1;
       }
@@ -212,9 +235,17 @@ http {
       if ($uri ~ "\.(js|css|xml|less|png|jpg|jpeg|gif|pdf|doc|txt|ico|rss|zip|mp3|rar|exe|wmv|doc|avi|ppt|mpg|mpeg|tif|wav|mov|psd|ai|xls|mp4|m4a|swf|dat|dmg|iso|flv|m4v|torrent|ttf|woff)") {
           set $prerender 0;
       }
+      if ($host = '<%= ENV["WWW_BASE_DOMAIN"] %>') {
+        set $redirectSquarespace 1;
+      }
 
       #resolve using Google's DNS server to force DNS resolution and prevent caching of IPs
       resolver 8.8.8.8;
+
+      if ($redirectSquarespace = 1){
+          set $prerender 3;
+          proxy_pass <%= ENV["WWW_PROXY_SITE"] %>;
+      }
 
       if ($prerender = 1) {
 
