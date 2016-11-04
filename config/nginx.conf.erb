@@ -71,7 +71,7 @@ http {
     <% end %>
 
     if ( $host = 'stanford.campuskudos.com' ) {
-      return 301 https://mentoring.stanford.edu$request_uri
+      return 301 https://mentoring.stanford.edu$request_uri;
     }
 
     <% if ENV["BASE_DOMAIN"] %>
