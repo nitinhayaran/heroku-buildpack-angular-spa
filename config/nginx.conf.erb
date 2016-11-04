@@ -70,7 +70,7 @@ http {
       }
     <% end %>
 
-    if ( server_name stanford.campuskudos.com ) {
+    if ( $host = 'stanford.campuskudos.com' ) {
       return 301 https://mentoring.stanford.edu$request_uri
     }
 
