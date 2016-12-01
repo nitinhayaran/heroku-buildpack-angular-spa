@@ -92,7 +92,7 @@ http {
     <% if ENV["API_URL"] %>
       location <%= ENV["API_PREFIX_PATH"] || "/api/" %> {
         proxy_pass <%= ENV["API_URL"] %>;
-        if ($http_referer ~* <%= ENV["WWW_BASE_DOMAIN"].gsub(/\-/g, "\\-") %>) {
+        if ($http_referer ~* "^http://www\.pg\-test\.com") {
           proxy_pass <%= ENV["WWW_PROXY_SITE"] %>;
         }
         proxy_set_header X-Real-IP $remote_addr;
