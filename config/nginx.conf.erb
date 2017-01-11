@@ -10,14 +10,39 @@ events {
 }
 
 http {
-  <% if ENV["FORCE_HTTPS"] %>
-    gzip off;
-  <% else %>
-    gzip on;
-    gzip_disable "MSIE [1-6]\.(?!.*SV1)";
-    gzip_comp_level 2;
-    gzip_min_length 512;
-  <% end %>
+
+  gzip on;
+  gzip_disable "MSIE [1-6]\.(?!.*SV1)";
+  gzip_comp_level 2;
+  gzip_min_length 512;
+  gzip_proxied any;
+  gzip_vary on;
+  gzip_types
+    application/atom+xml
+    application/javascript
+    application/x-javascript
+    application/json
+    application/ld+json
+    application/manifest+json
+    application/rss+xml
+    application/vnd.geo+json
+    application/vnd.ms-fontobject
+    application/x-font-ttf
+    application/x-web-app-manifest+json
+    application/xhtml+xml
+    application/xml
+    font/opentype
+    image/bmp
+    image/svg+xml
+    image/x-icon
+    text/cache-manifest
+    text/css
+    text/plain
+    text/vcard
+    text/vnd.rim.location.xloc
+    text/vtt
+    text/x-component
+    text/x-cross-domain-policy;
 
   server_tokens off;
 
@@ -45,6 +70,20 @@ http {
       }
     <% end %>
 
+    if ( $host = 'hoyagateway.peoplegrove.com' ) {
+      return 301 https://hoyagateway.georgetown.edu$request_uri;
+    }
+
+    <% if ENV["BASE_DOMAIN"] %>
+      if ( $host = '<%= ENV["BASE_DOMAIN"] %>' ) {
+        return 301 $http_x_forwarded_proto://www.<%= ENV["BASE_DOMAIN"] %>$request_uri;
+      }
+    <% end %>
+
+    if ( $host = 'www.campuskudos.com' ) {
+      return 301 https://www.peoplegrove.com/for-education?redirect=true;
+    }
+
     <% if ENV["BASIC_AUTH_USER"] && ENV["BASIC_AUTH_PASSWORD"] %>
       auth_basic "Restricted";
       auth_basic_user_file <%= "#{ENV["HOME"]}/config/htpasswd" %>;
@@ -53,9 +92,13 @@ http {
     <% if ENV["API_URL"] %>
       location <%= ENV["API_PREFIX_PATH"] || "/api/" %> {
         proxy_pass <%= ENV["API_URL"] %>;
+        if ($http_referer ~* '<%= ENV["WWW_BASE_DOMAIN"].gsub(".","\\.").gsub("-","\\-") %>') {
+          proxy_pass <%= ENV["WWW_PROXY_SITE"] %>;
+        }
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-NginX-Proxy true;
+        proxy_set_header X-Host $host;
         proxy_ssl_session_reuse off;
         proxy_redirect off;
         <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-API-Proxy on;<% end %>
@@ -98,28 +141,69 @@ http {
       }
     <% end %>
 
+    # for robots.txt
+    location = /robots.txt {
+      set $a "robots-client.txt";
+      if ( $host ~* (.*)\.test\.campuskudos\.com$ ) {
+        set $a "robots-dev.txt";
+      }
+      if ( $host ~* (.*)\.test\.peoplegrove\.com$ ) {
+        set $a "robots-dev.txt";
+      }
+      if ( $host = "www.peoplegrove.com" ) {
+        set $a "robots.txt";
+      }
+      try_files /$a =404;
+    }
+
     location ~* \index.html$ {
       expires off;
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Html on;<% end %>
+      <% if ENV["WWW_BASE_DOMAIN"] %>
+        try_files $uri @squarespace;
+      <% end %>
     }
 
-    location ~* \.(ogg|ogv|svgz|mp4|css|rss|atom|js|jpg|jpeg|gif|png|ico|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|tar|mid|midi|wav|bmp|rtf|html|txt|htm)$ {
+    location ~* \.(ogg|ogv|svgz|mp4|css|rss|atom|jpg|jpeg|gif|png|ico|zip|tgz|gz|rar|bz2|doc|xls|exe|ppt|tar|mid|midi|wav|bmp|rtf|html|txt|htm)$ {
       expires max;
       log_not_found off;
       access_log off;
       add_header Cache-Control public;
       fastcgi_hide_header Set-Cookie;
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Speed on;<% end %>
+      <% if ENV["WWW_BASE_DOMAIN"] %>
+        try_files $uri @squarespace;
+      <% end %>
+    }
+
+    location ~* \.(js)$ {
+      add_header 'Access-Control-Allow-Origin' '*';
+      add_header 'Access-Control-Allow-Credentials' 'true';
+      add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+      expires max;
+      log_not_found off;
+      access_log off;
+      add_header Cache-Control public;
+      fastcgi_hide_header Set-Cookie;
+      <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-JS on;<% end %>
+      <% if ENV["WWW_BASE_DOMAIN"] %>
+        try_files $uri @squarespace;
+      <% end %>
     }
 
     location ~* \.(eot|oft|svg|ttf|woff)$ {
-      add_header Access-Control-Allow-Origin *;
+      add_header 'Access-Control-Allow-Origin' '*';
+      add_header 'Access-Control-Allow-Credentials' 'true';
+      add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
       expires max;
       log_not_found off;
       access_log off;
       add_header Cache-Control public;
       fastcgi_hide_header Set-Cookie;
       <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Font on;<% end %>
+      <% if ENV["WWW_BASE_DOMAIN"] %>
+        try_files $uri @squarespace;
+      <% end %>
     }
 
     location ~ /\. {
@@ -128,11 +212,60 @@ http {
     }
 
     location / {
-      add_header "Cache-Control" "no-cache, no-store, must-revalidate";
-      add_header "Pragma" "no-cache";
-      add_header "Expires" "0";
-      try_files $uri $uri/ /index.html =404;
-      <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Base-Location on;<% end %>
+      try_files $uri @prerender;
     }
+
+    location @squarespace {
+      if ($host = '<%= ENV["WWW_BASE_DOMAIN"] %>') {
+        proxy_pass <%= ENV["WWW_PROXY_SITE"] %>;
+      }
+    }
+
+    location @prerender {
+      proxy_set_header X-Prerender-Token <%= ENV["PRERENDER_TOKEN"] %>;
+
+      set $prerender 0;
+      set $redirectSquarespace 0;
+
+      if ($http_user_agent ~* "baiduspider|twitterbot|facebookexternalhit|rogerbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot|vkShare|W3C_Validator") {
+          set $prerender 1;
+      }
+      if ($args ~ "_escaped_fragment_") {
+          set $prerender 1;
+      }
+      if ($http_user_agent ~ "Prerender") {
+          set $prerender 0;
+      }
+      if ($uri ~ "\.(js|css|xml|less|png|jpg|jpeg|gif|pdf|doc|txt|ico|rss|zip|mp3|rar|exe|wmv|doc|avi|ppt|mpg|mpeg|tif|wav|mov|psd|ai|xls|mp4|m4a|swf|dat|dmg|iso|flv|m4v|torrent|ttf|woff)") {
+          set $prerender 0;
+      }
+      if ($host = '<%= ENV["WWW_BASE_DOMAIN"] %>') {
+        set $redirectSquarespace 1;
+      }
+
+      #resolve using Google's DNS server to force DNS resolution and prevent caching of IPs
+      resolver 8.8.8.8;
+
+      if ($redirectSquarespace = 1){
+          set $prerender 3;
+          proxy_pass <%= ENV["WWW_PROXY_SITE"] %>;
+      }
+
+      if ($prerender = 1) {
+
+          #setting prerender as a variable forces DNS resolution since nginx caches IPs and doesnt play well with load balancing
+          set $prerender "service.prerender.io";
+          rewrite .* /$http_x_forwarded_proto://$host$request_uri? break;
+          proxy_pass http://$prerender;
+      }
+      if ($prerender = 0) {
+          add_header "Cache-Control" "no-cache, no-store, must-revalidate";
+          add_header "Pragma" "no-cache";
+          add_header "Expires" "0";
+          <% if ENV["NGINX_DEBUG"] %>add_header X-SPA-Base-Location on;<% end %>
+          rewrite .* /index.html break;
+      }
+    }
+
   }
 }
